@@ -41,10 +41,10 @@ This is a list of things that I changed to get the SDK to compile and work with 
 
 - Strip out the files that are specific for the Aardvark and the FT2232
 - Remove the now useless makefile
-- Replace `FLIR_I2C.c` and `FLIR_I2C.h` with `AR_I2C.c` and `AR_I2C.h` which use the Arduino Libraries (`Wire.h` and `SPI.h`) instead of the FT2232H and Aardvark libraries.
+- Re-write `FLIR_I2C.c` and `FLIR_I2C.h` to use the Arduino Libraries (`Wire.h` and `SPI.h`) instead of the FT2232H and Aardvark libraries.
 
 The first two of these items are not actually necessary, but I don't like leaving useless files lying around. However, I placed a pure version of the SDK into a folder in this repo called _[LeptonSDKPure](./LeptonSDKPure)_ so that the original contents of the SDK is available, and can be compared to the modified version of the SDK that I have written.
 
 ### Adapting for Other Platforms
 
-If you want to adapt the Lepton SDK for whatever system you want (Raspberry Pi, Nvidia Jetson, Intel Edison, Acorn Archimedes, UNIVAC II, etc.), all you should have to do is modify the `AR_I2C.c` and `AR_I2C.h` files to use the I2C API on the platform that you are using.
+If you want to adapt the Lepton SDK for whatever system you want (Raspberry Pi, Nvidia Jetson, Intel Edison, Acorn Archimedes, UNIVAC II, etc.), all you should have to do is modify the `FLIR_I2C.c` and `FLIR_I2C.h` files to use the I2C API on the platform that you are using.
