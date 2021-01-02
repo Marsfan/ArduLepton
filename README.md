@@ -13,14 +13,13 @@ This is a simple project to implement the FLIR Lepton SDK on board of an Arduino
 
 ## Repository Structure
 
-| **Directory**  | **Purpose**  |
-|----------------|--------------|
-| [ArduLepton](./ArduLepton) | Arduino Program for the FLIR Lepton | 
-| [ArduLepton/src/leptonSDK](./ArduLepton/src/sdk) | FLIR Lepton SDK Modified for use with the Arduino IDE (placed in a src folder because that is what the Arduino Compiler requires to make it work, [though this might change in the future](https://github.com/arduino/Arduino/pull/11110/files)) | 
-| [Docs](./Docs) | Schematics, datasheets, and other documentation that I found useful when working on this project. | 
-| [LeptonSDKPure](./LeptonSDKPure) | A clean, unmodified version of the FLIR Lepton SDK, for comparasion with modified version in [ArduLepton/src/leptonSDK](./ArduLepton/src/sdk) | 
-| [pythonReader](./PythonReader) | A simple python utility that reads incoming data from a Serial Port and dumps it into a pgm file. Used to get images that are sent by the ArduLepton script. |
-
+| **Directory**   | **Purpose** |
+| ----------------|-------------|
+| _[ArduLepton](./ArduLepton)_                       | Arduino Program for the FLIR Lepton|
+| _[ArduLepton/src/leptonSDK](./ArduLepton/src/sdk)_ | FLIR Lepton SDK Modified for use with the Arduino IDE (placed in a src folder because that is what the Arduino Compiler requires to make it work, ([this might change in the future](https://github.com/arduino/Arduino/pull/11110/files)) |
+| _[Docs](./Docs)_ | Schematics, datasheets, and other documentation that I found useful when working on this project. |
+| _[LeptonSDKPure](./LeptonSDKPure)_ | A clean, unmodified version of the FLIR Lepton SDK, for comparison with modified version in _[ArduLepton/src/leptonSDK](./ArduLepton/src/sdk)_ |
+| _[pythonReader](./PythonReader)_ | A simple python utility that reads incoming data from a Serial Port and dumps it into a pgm file. Used to get images that are sent by the ArduLepton script. |
 
 ## Getting It Working
 
@@ -41,7 +40,8 @@ This is a list of things that I changed to get the SDK to compile and work with 
 
 - Strip out the files that are specific for the Aardvark and the FT2232
 - Remove the now useless makefile
-- Re-write `FLIR_I2C.c` and `FLIR_I2C.h` to use the Arduino Libraries (`Wire.h` and `SPI.h`) instead of the FT2232H and Aardvark libraries.
+- Rename all C files in _[ArduLepton/src/LeptonSDK] to be C++ files (`*.c` &rarr; `*.cpp`) and all header files in the same folder to be C++ header files (`*.h` &rarr; `*.hpp`). This is needed so that the Arduino compiler uses `g++` instead of `gcc` when compiling the files. If `gcc` was used, it would mess up due to the use of `#include <Arduino.h>`
+- Re-write `FLIR_I2C.c` and `FLIR_I2C.h` to use the Arduino Libraries (`Wire.h` and `SPI.h`) instead of the FT2232H and Aardvark libraries.\
 
 The first two of these items are not actually necessary, but I don't like leaving useless files lying around. However, I placed a pure version of the SDK into a folder in this repo called _[LeptonSDKPure](./LeptonSDKPure)_ so that the original contents of the SDK is available, and can be compared to the modified version of the SDK that I have written.
 
