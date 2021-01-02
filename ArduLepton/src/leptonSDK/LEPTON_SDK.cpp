@@ -63,13 +63,13 @@
 /******************************************************************************/
 /** INCLUDE FILES                                                            **/
 /******************************************************************************/
-#include "LEPTON_SDK.h"
-#include "LEPTON_I2C_Protocol.h"
+#include "LEPTON_SDK.hpp"
+#include "LEPTON_I2C_Protocol.hpp"
 
 
 
 #ifdef LEP_USE_DYNAMIC_ALLOCATION
-    #include "stdlib.h"
+    #include "stdlib.hpp"
 #endif
 
 /******************************************************************************/

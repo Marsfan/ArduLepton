@@ -62,8 +62,8 @@
 /******************************************************************************/
 /** INCLUDE FILES                                                            **/
 /******************************************************************************/
-#include "LEPTON_SDK.h"
-#include "LEPTON_VID.h"
+#include "LEPTON_SDK.hpp"
+#include "LEPTON_VID.hpp"
 
 #if (USE_BORESIGHT_MEASUREMENT_FUNCTIONS == 1)
 #include "math.h"

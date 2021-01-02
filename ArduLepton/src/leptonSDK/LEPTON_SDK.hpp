@@ -70,10 +70,10 @@ extern "C"
 /******************************************************************************/
 /** INCLUDE FILES                                                            **/
 /******************************************************************************/
-    #include "LEPTON_Types.h"
-    #include "LEPTON_ErrorCodes.h"
-    #include "LEPTON_SDKConfig.h"
-    #include "LEPTON_I2C_Protocol.h"
+    #include "LEPTON_Types.hpp"
+    #include "LEPTON_ErrorCodes.hpp"
+    #include "LEPTON_SDKConfig.hpp"
+    #include "LEPTON_I2C_Protocol.hpp"
 	
 /******************************************************************************/
     /**

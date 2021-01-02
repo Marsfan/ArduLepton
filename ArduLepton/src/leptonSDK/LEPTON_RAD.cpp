@@ -64,8 +64,8 @@
 /** INCLUDE FILES                                                            **/
 /******************************************************************************/
 
-#include "LEPTON_SDK.h"
-#include "LEPTON_RAD.h"
+#include "LEPTON_SDK.hpp"
+#include "LEPTON_RAD.hpp"
 
 /******************************************************************************/
 /** LOCAL DEFINES                                                            **/

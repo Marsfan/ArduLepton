@@ -1,4 +1,13 @@
 /*******************************************************************************
+ * FLIR_I2C.h re-implemented to use Arduino Libraries instead
+ * Work Performed by Gabriel Roper
+ * Below is the initial header that was written by a developer for FLIR Systems
+ * Included as required. 
+ ******************************************************************************/
+
+/*******************************************************************************
+
+/*******************************************************************************
 **
 **    File NAME: FLIR_I2C.h
 **
@@ -34,8 +43,8 @@ extern "C"
 /******************************************************************************/
 /** INCLUDE FILES                                                            **/
 /******************************************************************************/
-    #include "LEPTON_Types.h"
-    #include "LEPTON_ErrorCodes.h"
+    #include "LEPTON_Types.hpp"
+    #include "LEPTON_ErrorCodes.hpp"
 
 /******************************************************************************/
 /** EXPORTED DEFINES                                                         **/

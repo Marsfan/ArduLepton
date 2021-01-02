@@ -63,11 +63,11 @@
 /******************************************************************************/
 /** INCLUDE FILES                                                            **/
 /******************************************************************************/
-#include "LEPTON_Types.h"
-#include "LEPTON_ErrorCodes.h"
-#include "LEPTON_I2C_Protocol.h"
-#include "LEPTON_I2C_Reg.h"
-#include "crc16.h"
+#include "LEPTON_Types.hpp"
+#include "LEPTON_ErrorCodes.hpp"
+#include "LEPTON_I2C_Protocol.hpp"
+#include "LEPTON_I2C_Reg.hpp"
+#include "crc16.hpp"
 
 /******************************************************************************/
 /** LOCAL DEFINES                                                            **/

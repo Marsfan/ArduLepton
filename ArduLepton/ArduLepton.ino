@@ -1,7 +1,7 @@
-#include "src/LeptonSDK/LEPTON_SDK.h"
-#include "src/LeptonSDK/LEPTON_Types.h"
-#include "src/LeptonSDK/LEPTON_SYS.h"
-#include "src/LeptonSDK/LEPTON_Types.h"
+#include "src/LeptonSDK/LEPTON_SDK.hpp"
+#include "src/LeptonSDK/LEPTON_Types.hpp"
+#include "src/LeptonSDK/LEPTON_SYS.hpp"
+#include "src/LeptonSDK/LEPTON_Types.hpp"
 
 LEP_CAMERA_PORT_DESC_T leptonCamera;
 LEP_RESULT leptonCmdStat;

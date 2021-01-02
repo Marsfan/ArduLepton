@@ -68,10 +68,10 @@
 /** INCLUDE FILES                                                            **/
 /******************************************************************************/
 
-#include "LEPTON_Types.h"
-#include "LEPTON_ErrorCodes.h"
-#include "LEPTON_I2C_Service.h"
-#include "FLIR_I2C.h"
+#include "LEPTON_Types.hpp"
+#include "LEPTON_ErrorCodes.hpp"
+#include "LEPTON_I2C_Service.hpp"
+#include "FLIR_I2C.hpp"
 
 /******************************************************************************/
 /** LOCAL DEFINES                                                            **/

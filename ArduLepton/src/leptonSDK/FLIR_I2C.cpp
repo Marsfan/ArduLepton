@@ -47,20 +47,20 @@
 
 #define _WINSOCKAPI_
 
-#include "LEPTON_Types.h"
-#include "LEPTON_ErrorCodes.h"
-#include "LEPTON_MACROS.h"
-#include "FLIR_I2C.h"
-#include "LEPTON_I2C_Reg.h"
+#include "LEPTON_Types.hpp"
+#include "LEPTON_ErrorCodes.hpp"
+#include "LEPTON_MACROS.hpp"
+#include "FLIR_I2C.hpp"
+#include "LEPTON_I2C_Reg.hpp"
 #include <stdio.h>
 #include <stdlib.h>
 
 /* Aardvark Includes */
-#include "aardvark.h"
+#include "aardvark.hpp"
 
 /* FTDI Includes */
-#include "ftd2xx.h"
-#include "libMPSSE_i2c.h"
+#include "ftd2xx.hpp"
+#include "libMPSSE_i2c.hpp"
 
 /* TCP IP Socket Includes */
 #if defined(WINDOWSS) || defined(WIN32)
