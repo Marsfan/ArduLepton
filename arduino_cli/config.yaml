@@ -1,0 +1,16 @@
+board_manager:
+  additional_urls: 
+  - https://raw.githubusercontent.com/sparkfun/Arduino_Apollo3/master/package_sparkfun_apollo3_index.json
+daemon:
+  port: "50051"
+library:
+  enable_unsafe_install: false
+logging:
+  file: ""
+  format: text
+  level: info
+sketch:
+  always_export_binaries: false
+telemetry:
+  addr: :9090
+  enabled: false
