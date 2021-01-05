@@ -1,4 +1,11 @@
 /*******************************************************************************
+ * FLIR_I2C.c re-implemented to use Arduino Libraries instead
+ * Work Performed by Gabriel Roper
+ * Below is the initial header that was written by a developer for FLIR Systems
+ * Included as required. 
+ ******************************************************************************/
+
+/*******************************************************************************
 **
 **    File NAME: FLIR_I2C.c
 **
@@ -45,52 +52,25 @@
 /** INCLUDE FILES                                                            **/
 /******************************************************************************/
 
-#define _WINSOCKAPI_
-
 #include "LEPTON_Types.hpp"
 #include "LEPTON_ErrorCodes.hpp"
-#include "LEPTON_MACROS.hpp"
+#include "LEPTON_Macros.hpp"
 #include "FLIR_I2C.hpp"
 #include "LEPTON_I2C_Reg.hpp"
 #include <stdio.h>
 #include <stdlib.h>
-
-/* Aardvark Includes */
-#include "aardvark.hpp"
-
-/* FTDI Includes */
-#include "ftd2xx.hpp"
-#include "libMPSSE_i2c.hpp"
-
-/* TCP IP Socket Includes */
-#if defined(WINDOWSS) || defined(WIN32)
-#define WIN32_LEAN_AND_MEAN
-#include <winsock2.h>
-#include <windows.h>
-#include <ws2tcpip.h>
-
-
-#pragma comment (lib, "Ws2_32.lib")
-#pragma comment (lib, "Mswsock.lib")
-#pragma comment (lib, "AdvApi32.lib")
-#endif
+#include <Arduino.h>
+#include <Wire.h>
 
 /******************************************************************************/
 /** LOCAL DEFINES                                                            **/
 /******************************************************************************/
 
-#define FTDI_DEVICE_STRING      "Dual RS232-HS B"
-#define DEFAULT_PORT "27316"
-#define DEFAULT_ADDR "192.168.7.2"
-
-#define ADDRESS_SIZE_BYTES  2
-#define VALUE_SIZE_BYTES    2
+#define ADDRESS_SIZE_BYTES 2
+#define VALUE_SIZE_BYTES 2
 #define I2C_BUFFER_SIZE (ADDRESS_SIZE_BYTES + LEP_I2C_DATA_BUFFER_0_LENGTH)
 LEP_UINT8 tx[I2C_BUFFER_SIZE];
 LEP_UINT8 rx[I2C_BUFFER_SIZE];
-
-
-
 
 /******************************************************************************/
 /** LOCAL TYPE DEFINITIONS                                                   **/
@@ -100,42 +80,29 @@ LEP_UINT8 rx[I2C_BUFFER_SIZE];
 /** PRIVATE DATA DECLARATIONS                                                **/
 /******************************************************************************/
 LEP_PROTOCOL_DEVICE_E masterDevice;
-Aardvark handle;
 
 LEP_CMD_PACKET_T cmdPacket;
 LEP_RESPONSE_PACKET_T responsePacket;
 
-FT_HANDLE ftHandle;
-FT_STATUS status;
-
-#if defined(WINDOWSS) || defined(WIN32)
-SOCKET ConnectSocket = INVALID_SOCKET;
-WSADATA wsaData;
-struct addrinfo *addrresult = NULL,
-                 hints;
-#endif
-/******************************************************************************/
-/** PRIVATE FUNCTION DECLARATIONS                                            **/
-/******************************************************************************/
-
-/******************************************************************************/
-/** EXPORTED PUBLIC DATA                                                     **/
-/******************************************************************************/
+// TODO: Allow user to set which i2c device they want to use. (such as Wire1)
 
 /******************************************************************************/
 /** EXPORTED PUBLIC FUNCTIONS                                                **/
 /******************************************************************************/
 
-
+// TODO: See What the heck needs to be changed on this function
+// Looks like this is the function that would be used to select the correct I2C bus
+// But of course we can't just give it a pointer to the correct device. That would be too easy
+// I suppose this is better to minimize how many files need editing, but I still think it is stupid. 
+// Instead we need some sort of switch to handle selecting the rig
 LEP_RESULT DEV_I2C_MasterSelectDevice(LEP_PROTOCOL_DEVICE_E device)
 {
     LEP_RESULT result = LEP_OK;
 
     masterDevice = device;
 
-    return(result);
+    return (result);
 }
-
 
 /******************************************************************************/
 /**
@@ -151,155 +118,15 @@ LEP_RESULT DEV_I2C_MasterSelectDevice(LEP_PROTOCOL_DEVICE_E device)
  * 
  * @return LEP_RESULT  0 if all goes well, errno otherwise
  */
-LEP_RESULT DEV_I2C_MasterInit(LEP_UINT16 portID, 
+LEP_RESULT DEV_I2C_MasterInit(LEP_UINT16 portID,
                               LEP_UINT16 *BaudRate)
 {
-	LEP_RESULT result = LEP_OK;
-	int numAardvarkConnected = 0;
-	LEP_UINT16 numFreeDevices;
-	FT_STATUS status;
-	ChannelConfig channelConf;
-	uint32 channels;
-	int i;
-	int res;
-	FT_DEVICE_LIST_INFO_NODE devList;
 
-#if defined(WINDOWSS) || defined(WIN32)
-	unsigned long nonBlockMode = 1;
-	fd_set Write, fdErr;
-	TIMEVAL socketTimeout;
-#endif
-
-    /* Place Device-Specific Interface here
-    */
-   switch(masterDevice)
-   {
-   case DEV_BOARD_FTDI_V2:
-       
-
-       Init_libMPSSE();
-       channelConf.ClockRate = I2C_CLOCK_FAST_MODE;
-       channelConf.LatencyTimer = 0;
-       channelConf.Options = 0;
-
-       result = LEP_ERROR_CREATING_COMM;
-
-       status = I2C_GetNumChannels(&channels);
-       if(channels > 0)
-	   {
-          
-          for(i = 0; i < channels; i++)
-          {
-             status = I2C_GetChannelInfo(i, &devList);
-             if(strcmp(FTDI_DEVICE_STRING, devList.Description) == 0)
-             {
-                status = I2C_OpenChannel(i ,&ftHandle);
-                status = I2C_InitChannel(ftHandle,&channelConf);
-                result = LEP_OK;
-
-                break;
-             }
-          }
-       }
-       
-       break;
-#if defined(WINDOWSS) || defined(WIN32)
-   case TCP_IP:
-		closesocket(ConnectSocket);
-
-		// Initialize Winsock
-		res = WSAStartup(MAKEWORD(2,2), &wsaData);
-		if (res != 0) {
-			printf("WSAStartup failed with error: %d\n", res);
-			result = LEP_ERROR;
-			return(result);
-		}
-
-		ZeroMemory( &hints, sizeof(hints) );
-		hints.ai_family = AF_UNSPEC;
-		hints.ai_socktype = SOCK_STREAM;
-		hints.ai_protocol = IPPROTO_TCP;
-
-		// Resolve the server address and port
-		res = getaddrinfo(DEFAULT_ADDR, DEFAULT_PORT, &hints, &addrresult);
-		if ( res != 0 ) {
-			printf("getaddrinfo failed with error: %d\n", res);
-			WSACleanup();
-			result = LEP_ERROR;
-			return(result);
-		}
-
-       ConnectSocket = socket(addrresult->ai_family, addrresult->ai_socktype, addrresult->ai_protocol);
-       if (ConnectSocket == INVALID_SOCKET) {
-           printf("socket failed with error: %ld\n", WSAGetLastError());
-           WSACleanup();
-           result = LEP_ERROR;
-		   return(result);
-       }
-	   
-	   // Set to Non-blocking mode for quick timeout
-       ioctlsocket(ConnectSocket, FIONBIO, &nonBlockMode);
-
-       // Connect to server, returns immediately
-       res = connect( ConnectSocket, addrresult->ai_addr, (int)addrresult->ai_addrlen);
-       if (res == SOCKET_ERROR) 
-	   {
-           res = WSAGetLastError();
-           if (res == WSAEWOULDBLOCK)
-		   {
-                FD_ZERO(&Write);
-                FD_ZERO(&fdErr);
-                FD_SET(ConnectSocket, &Write);
-                FD_SET(ConnectSocket, &fdErr);
-
-                socketTimeout.tv_sec  = 1; //Sets timeout to 1 second
-                socketTimeout.tv_usec = 0; 
-
-                res = select (0, NULL, &Write, &fdErr, &socketTimeout);
-
-                if (res == 0)
-                {
-                    result = LEP_ERROR;
-                }
-                else
-                {
-                    if (FD_ISSET(ConnectSocket, &Write))
-                    {
-                        result = LEP_OK;
-                    }
-                    if (FD_ISSET(ConnectSocket, &fdErr))
-                    {
-                        result = LEP_ERROR;
-                    }
-                }
-            }
-
-	   }
-       // Set us back to blocking mode.
-       nonBlockMode = 0;
-       ioctlsocket(ConnectSocket, FIONBIO, &nonBlockMode);
-		
-       break;
-#endif
-   case AARDVARK_I2C:
-   default:
-       numAardvarkConnected = aa_find_devices(1, &numFreeDevices);
-
-       if(numAardvarkConnected < 1 || numFreeDevices == AA_PORT_NOT_FREE)
-       {
-           return(LEP_ERROR_CREATING_COMM);
-       }
-
-       handle = aa_open(0);
-       aa_i2c_bitrate(handle, *BaudRate);
-       aa_target_power(handle, AA_TARGET_POWER_BOTH);
-       //aa_i2c_pullup(handle, AA_I2C_PULLUP_NONE);
-
-       break;
-   }
-   
-
-   return(result);
+    Wire.begin();
+    Wire.setClock(400000);
+    *BaudRate = 400;
+    LEP_RESULT result = LEP_OK;
+    return (result);
 }
 
 /**
@@ -309,29 +136,11 @@ LEP_RESULT DEV_I2C_MasterInit(LEP_UINT16 portID,
  */
 LEP_RESULT DEV_I2C_MasterClose()
 {
+
+    Wire.end();
     LEP_RESULT result = LEP_OK;
 
-    /* Place Device-Specific Interface here
-    */ 
-   switch(masterDevice)
-   {
-   case DEV_BOARD_FTDI_V2:
-       I2C_CloseChannel(ftHandle);
-       break;
-#if defined(WINDOWSS) || defined(WIN32)
-   case TCP_IP:
-		closesocket(ConnectSocket);
-   break;
-#endif
-   case AARDVARK_I2C:
-   default:
-       aa_close(handle);
-
-       break;
-   }
-   
-
-    return(result);
+    return (result);
 }
 
 /**
@@ -339,277 +148,166 @@ LEP_RESULT DEV_I2C_MasterClose()
  * 
  * @return LEP_RESULT  0 if all goes well, errno otherwise.
  */
-LEP_RESULT DEV_I2C_MasterReset(void )
+LEP_RESULT DEV_I2C_MasterReset(void)
 {
-   LEP_RESULT result = LEP_OK;
-
-   /* Place Device-Specific Interface here
-   */ 
-   switch(masterDevice)
-   {
-   case DEV_BOARD_FTDI_V2:
-
-       break;
-
-   case AARDVARK_I2C:
-   default:
-       aa_close(handle);
-
-       break;
-   }
-
-
-   return(result);
+    Wire.end();
+    Wire.begin();
+    LEP_RESULT result = LEP_OK;
+    return (result);
 }
 
-LEP_RESULT DEV_I2C_MasterReadData(LEP_UINT16  portID,               // User-defined port ID
-                                  LEP_UINT8   deviceAddress,        // Lepton Camera I2C Device Address
-                                  LEP_UINT16  regAddress,           // Lepton Register Address
-                                  LEP_UINT16 *readDataPtr,          // Read DATA buffer pointer
-                                  LEP_UINT16  wordsToRead,          // Number of 16-bit words to Read
-                                  LEP_UINT16 *numWordsRead,         // Number of 16-bit words actually Read
-                                  LEP_UINT16 *status                // Transaction Status
-                                 )
+LEP_RESULT DEV_I2C_MasterReadData(LEP_UINT16 portID,        // User-defined port ID
+                                  LEP_UINT8 deviceAddress,  // Lepton Camera I2C Device Address
+                                  LEP_UINT16 regAddress,    // Lepton Register Address
+                                  LEP_UINT16 *readDataPtr,  // Read DATA buffer pointer
+                                  LEP_UINT16 wordsToRead,   // Number of 16-bit words to Read
+                                  LEP_UINT16 *numWordsRead, // Number of 16-bit words actually Read
+                                  LEP_UINT16 *status        // Transaction Status
+)
 {
-   LEP_RESULT result = LEP_OK;
-   int ftdiStatus;
-   int aardvark_result;
+    LEP_RESULT result = LEP_OK;
+    uint8_t i2cStatus;
+    LEP_UINT32 bytesToWrite = ADDRESS_SIZE_BYTES;
+    LEP_UINT32 bytesToRead = wordsToRead << 1; // Same as multiplying by 2. Need to do this as Arduino Wire works in 8 bit words
+    LEP_UINT32 bytesActuallyWritten = 0;
+    LEP_UINT32 bytesActuallyRead = 0;
+    LEP_UINT32 wordsActuallyRead = 0;
+    LEP_UINT8 *txdata = &tx[0];
+    LEP_UINT8 *rxdata = &rx[0];
+    LEP_UINT16 *dataPtr;
+    LEP_UINT16 *writePtr;
 
+    *(LEP_UINT16 *)txdata = REVERSE_ENDIENESS_UINT16(regAddress);
+
+    /************************************* 
+    /   Begin Arduino Transmission Section 
+    ***************************************/
+   // TODO: COnfigure this to use the write function below. 
+    Wire.beginTransmission(deviceAddress);
+
+    bytesActuallyWritten = Wire.write((const uint8_t*)txdata, (int)bytesToWrite);
+    i2cStatus = Wire.endTransmission();
+    if (i2cStatus || bytesActuallyWritten != bytesToWrite)
+    {
+        result = LEP_ERROR;
+        return (result);
+    }
+    Wire.requestFrom(deviceAddress, bytesToRead);
+    // TODO: Check if we need to do this wait
+    // delayMicroseconds(10); // Wait a bit to make sure full transaction happens.
+    bytesActuallyRead = Wire.available();
+    for (LEP_UINT32 b = 0; b < bytesActuallyRead; b++)
+    {   
+        rxdata[b] = Wire.read();
+    }
+    /************************************** 
+    *   End Arduino Transmission Section  * 
+    ***************************************/
+
+    wordsActuallyRead = (LEP_UINT16)(bytesActuallyRead >> 1);
+    *numWordsRead = wordsActuallyRead;
+
+    if (result == LEP_OK)
+    {
+        dataPtr = (LEP_UINT16 *)&rxdata[0];
+        writePtr = readDataPtr;
+        while (wordsActuallyRead--)
+        {
+            *writePtr++ = REVERSE_ENDIENESS_UINT16(*dataPtr);
+            dataPtr++;
+        }
+    }
+
+    return (result);
+}
+
+LEP_RESULT DEV_I2C_MasterWriteData(LEP_UINT16 portID,           // User-defined port ID
+                                   LEP_UINT8 deviceAddress,     // Lepton Camera I2C Device Address
+                                   LEP_UINT16 regAddress,       // Lepton Register Address
+                                   LEP_UINT16 *writeDataPtr,    // Write DATA buffer pointer
+                                   LEP_UINT16 wordsToWrite,     // Number of 16-bit words to Write
+                                   LEP_UINT16 *numWordsWritten, // Number of 16-bit words actually written
+                                   LEP_UINT16 *status)          // Transaction Status
+{
+    LEP_RESULT result = LEP_OK;
+    uint8_t i2cStatus;
+    LEP_INT32 bytesOfDataToWrite = (wordsToWrite << 1); // Mult by 2 since arduino using 8 bit words for i2c
+    LEP_INT32 bytesToWrite = bytesOfDataToWrite + ADDRESS_SIZE_BYTES;
+    LEP_INT32 bytesActuallyWritten = 0;
+    LEP_UINT8 *txdata = &tx[0];
+    LEP_UINT16 *dataPtr;
+    LEP_UINT16 *txPtr;
+
+    *(LEP_UINT16 *)txdata = REVERSE_ENDIENESS_UINT16(regAddress);
+    dataPtr = (LEP_UINT16 *)&writeDataPtr[0];
+    txPtr = (LEP_UINT16 *)&txdata[ADDRESS_SIZE_BYTES];
+    while (wordsToWrite--)
+    {
+        *txPtr++ = (LEP_UINT16)REVERSE_ENDIENESS_UINT16(*dataPtr);
+        dataPtr++;
+    }
+
+    /***************************************
+    *   Begin Arduino Transmission Section * 
+    ***************************************/
+    Wire.beginTransmission(deviceAddress);
+    bytesActuallyWritten = Wire.write((const uint8_t*)txdata, (int)bytesToWrite);
+    i2cStatus = Wire.endTransmission();
+    if (i2cStatus || bytesActuallyWritten != bytesToWrite)
+    {
+        result = LEP_ERROR;
+        return result;
+    }
+    /**************************************
+    *   End Arduino Transmission Section  *
+    ***************************************/
+
+    *numWordsWritten = (bytesActuallyWritten >> 1);
+
+    return (result);
+}
+
+LEP_RESULT DEV_I2C_MasterReadRegister(LEP_UINT16 portID,
+                                      LEP_UINT8 deviceAddress,
+                                      LEP_UINT16 regAddress,
+                                      LEP_UINT16 *regValue, // Number of 16-bit words actually written
+                                      LEP_UINT16 *status)
+{
+    LEP_RESULT result = LEP_OK;
+
+    LEP_UINT16 wordsActuallyRead;
     /* Place Device-Specific Interface here
-    */ 
-   
-   LEP_UINT32 bytesToWrite = ADDRESS_SIZE_BYTES;
-   LEP_UINT32 bytesToRead = wordsToRead << 1;
-   LEP_UINT32 bytesActuallyWritten = 0;
-   LEP_UINT32 bytesActuallyRead = 0;
-   LEP_UINT32 wordsActuallyRead = 0;
-   LEP_UINT8* txdata = &tx[0];
-   LEP_UINT8* rxdata = &rx[0];
-   LEP_UINT16 *dataPtr;
-   LEP_UINT16 *writePtr;
+    */
+    result = DEV_I2C_MasterReadData(portID, deviceAddress, regAddress, regValue, 1 /*1 word*/, &wordsActuallyRead, status);
 
-   *(LEP_UINT16*)txdata = REVERSE_ENDIENESS_UINT16(regAddress);
-
-
-   switch(masterDevice)
-   {   
-   case DEV_BOARD_FTDI_V2:
-       
-
-       /*
-         Write the address, which is 2 bytes
-       */
-       ftdiStatus = I2C_DeviceWrite(ftHandle, (uint32)deviceAddress, ADDRESS_SIZE_BYTES, (uint8*)txdata, (uint32*)&bytesActuallyWritten, 0x1d);
-       
-       /*
-             Read back the data at the address written above
-       */
-       ftdiStatus = I2C_DeviceRead(ftHandle, (uint32)deviceAddress, (uint32)bytesToRead, (uint8*)rxdata, (uint32*)&bytesActuallyRead, 0x19);
-       
-       ftdiStatus = 0;
-       bytesActuallyRead = bytesToRead;
-
-       if(ftdiStatus != 0 || bytesActuallyRead != bytesToRead)
-       {
-          result = LEP_ERROR;
-       }
-       break;
-#if defined(WINDOWSS) || defined(WIN32)
-	case TCP_IP:
-
-		memcpy((LEP_UINT8*)cmdPacket.data, (LEP_UINT8*)txdata, ADDRESS_SIZE_BYTES);
-		cmdPacket.deviceAddress = (LEP_UINT8)deviceAddress;
-		cmdPacket.bytesToTransfer = (LEP_UINT16)bytesToRead;
-		cmdPacket.readOrWrite = REG_READ;
-
-		/* Send command to read the data */
-		bytesActuallyRead = 0;
-		while( bytesActuallyRead < sizeof(LEP_CMD_PACKET_T) )
-		{	
-			bytesActuallyRead += send(ConnectSocket, ((char*)&cmdPacket) + bytesActuallyRead, sizeof(LEP_CMD_PACKET_T) - bytesActuallyRead, 0);
-		}
-
-		/* Receive the response */
-		bytesActuallyRead = 0;
-		while( bytesActuallyRead < sizeof(LEP_RESPONSE_PACKET_T) )
-		{
-			bytesActuallyRead += recv(ConnectSocket, ((char*)&responsePacket) + bytesActuallyRead, sizeof(LEP_RESPONSE_PACKET_T) - bytesActuallyRead, 0);
-		}
-		bytesActuallyRead = responsePacket.bytesTransferred;
-		memcpy(rxdata, responsePacket.data, bytesToRead);
-
-		break;
-#endif
-   case AARDVARK_I2C:
-   default:
-       
-       aardvark_result = aa_i2c_write_read(
-               handle, 
-               deviceAddress, 
-               AA_I2C_NO_FLAGS, 
-               bytesToWrite, 
-               txdata, 
-               (LEP_UINT16*)&bytesActuallyWritten, 
-               bytesToRead, 
-               rxdata, 
-               (LEP_UINT16*)&bytesActuallyRead);
-
-       if(aardvark_result != 0 || bytesActuallyRead != bytesToRead)
-       {
-          result = LEP_ERROR_I2C_FAIL;
-       }
-       else
-       {
-          result = (LEP_RESULT)aardvark_result;
-       }
-       break;
-   }
-   
-
-   wordsActuallyRead = (LEP_UINT16)(bytesActuallyRead >> 1);
-   *numWordsRead = wordsActuallyRead;
-
-   if(result == LEP_OK)
-   {
-       dataPtr = (LEP_UINT16*)&rxdata[0];
-       writePtr = readDataPtr;
-       while(wordsActuallyRead--)
-       {
-          *writePtr++ = REVERSE_ENDIENESS_UINT16(*dataPtr);
-          dataPtr++;
-       }
-   }
-
-
-   return(result);
+    return (result);
 }
 
-LEP_RESULT DEV_I2C_MasterWriteData(LEP_UINT16  portID,              // User-defined port ID
-                                   LEP_UINT8   deviceAddress,       // Lepton Camera I2C Device Address
-                                   LEP_UINT16  regAddress,          // Lepton Register Address
-                                   LEP_UINT16 *writeDataPtr,        // Write DATA buffer pointer
-                                   LEP_UINT16  wordsToWrite,        // Number of 16-bit words to Write
-                                   LEP_UINT16 *numWordsWritten,     // Number of 16-bit words actually written
-                                   LEP_UINT16 *status)              // Transaction Status
-{
-   LEP_RESULT result = LEP_OK;
-   int ftdiStatus;
-   int aardvark_result;
-   
-   LEP_INT32 bytesOfDataToWrite = (wordsToWrite << 1);
-   LEP_INT32 bytesToWrite = bytesOfDataToWrite + ADDRESS_SIZE_BYTES;
-   LEP_INT32 bytesActuallyWritten = 0;
-   LEP_UINT8* txdata = &tx[0];
-   LEP_UINT16 *dataPtr;
-   LEP_UINT16 *txPtr;
-
-   *(LEP_UINT16*)txdata = REVERSE_ENDIENESS_UINT16(regAddress);
-   dataPtr = (LEP_UINT16*)&writeDataPtr[0];
-   txPtr = (LEP_UINT16*)&txdata[ADDRESS_SIZE_BYTES]; 
-   while(wordsToWrite--){
-      *txPtr++ = (LEP_UINT16)REVERSE_ENDIENESS_UINT16(*dataPtr);
-      dataPtr++;
-   }
-
-   switch(masterDevice)
-   {
-    case DEV_BOARD_FTDI_V2:
-       
-       ftdiStatus = I2C_DeviceWrite(ftHandle, (uint32)deviceAddress, bytesToWrite, (uint8*)txdata, (uint32*)&bytesActuallyWritten, 0x13);
-       
-       if(ftdiStatus != 0 || bytesActuallyWritten != bytesToWrite)
-       {
-          result = LEP_ERROR;
-       }
-       break;
-#if defined(WINDOWSS) || defined(WIN32)
-	case TCP_IP:
-		memcpy(cmdPacket.data, txdata, bytesToWrite);
-		cmdPacket.deviceAddress = (LEP_UINT8)deviceAddress;
-		cmdPacket.bytesToTransfer = (LEP_UINT16)bytesToWrite;
-		cmdPacket.readOrWrite = REG_WRITE;
-
-		/* Send command to write the data */
-		bytesActuallyWritten = 0;
-		while( bytesActuallyWritten < sizeof(LEP_CMD_PACKET_T) )
-		{
-			bytesActuallyWritten += send(ConnectSocket, ((char*)&cmdPacket) + bytesActuallyWritten, sizeof(LEP_CMD_PACKET_T) - bytesActuallyWritten, 0);
-		}
-
-		/* Receive the response */
-		bytesActuallyWritten = 0;
-		while( bytesActuallyWritten < sizeof(LEP_RESPONSE_PACKET_T) )
-		{
-			bytesActuallyWritten += recv(ConnectSocket, ((char*)&responsePacket) + bytesActuallyWritten, sizeof(LEP_RESPONSE_PACKET_T) - bytesActuallyWritten, 0);
-		}
-		bytesActuallyWritten = responsePacket.bytesTransferred;
-
-		break;
-#endif
-   case AARDVARK_I2C:
-   default:
-       
-       aardvark_result = aa_i2c_write_ext(handle, deviceAddress, AA_I2C_NO_FLAGS, bytesToWrite, (LEP_UINT8*)txdata, (u16*)&bytesActuallyWritten);
-       break;
-       
-       if(aardvark_result != 0 || bytesActuallyWritten != bytesToWrite)
-       {
-         result = LEP_ERROR;
-       }
-   }
-   
-   *numWordsWritten = (bytesActuallyWritten >> 1);
-   
-   return(result);
-}
-
-LEP_RESULT DEV_I2C_MasterReadRegister( LEP_UINT16 portID,
-                                       LEP_UINT8  deviceAddress, 
+LEP_RESULT DEV_I2C_MasterWriteRegister(LEP_UINT16 portID,
+                                       LEP_UINT8 deviceAddress,
                                        LEP_UINT16 regAddress,
-                                       LEP_UINT16 *regValue,     // Number of 16-bit words actually written
-                                       LEP_UINT16 *status
-                                     )
+                                       LEP_UINT16 regValue, // Number of 16-bit words actually written
+                                       LEP_UINT16 *status)
 {
     LEP_RESULT result = LEP_OK;
-
-   LEP_UINT16 wordsActuallyRead;
+    LEP_UINT16 wordsActuallyWritten;
     /* Place Device-Specific Interface here
-    */ 
-   result = DEV_I2C_MasterReadData(portID, deviceAddress, regAddress, regValue, 1 /*1 word*/, &wordsActuallyRead, status);
+    */
+    result = DEV_I2C_MasterWriteData(portID, deviceAddress, regAddress, &regValue, 1, &wordsActuallyWritten, status);
 
-   return(result);
+    return (result);
 }
 
-LEP_RESULT DEV_I2C_MasterWriteRegister( LEP_UINT16 portID,
-                                        LEP_UINT8  deviceAddress, 
-                                        LEP_UINT16 regAddress,
-                                        LEP_UINT16 regValue,     // Number of 16-bit words actually written
-                                        LEP_UINT16 *status
-                                      )
-{
-   LEP_RESULT result = LEP_OK;
-   LEP_UINT16 wordsActuallyWritten;
-    /* Place Device-Specific Interface here
-    */ 
-   result = DEV_I2C_MasterWriteData(portID, deviceAddress, regAddress, &regValue, 1, &wordsActuallyWritten, status);
-
-   return(result);
-}
-
-LEP_RESULT DEV_I2C_MasterStatus(void )
+LEP_RESULT DEV_I2C_MasterStatus(void)
 {
     LEP_RESULT result = LEP_OK;
 
     /* Place Device-Specific Interface here
-    */ 
+    */
 
-
-    return(result);
+    return (result);
 }
-
 
 /******************************************************************************/
 /** PRIVATE MODULE FUNCTIONS                                                 **/
 /******************************************************************************/
-
-
