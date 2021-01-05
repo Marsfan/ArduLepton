@@ -107,19 +107,16 @@ int ByteCRC16(int value, int crcin)
  *      Note: minimum count is 1 (0 case not handled)
  */
 CRC16 CalcCRC16Words(unsigned int count, short *buffer) {
-
     int crc = 0;
 
     do {
 
         int value = *buffer++;
-#ifdef _BIG_ENDIAN
-        crc = ByteCRC16(value >> 8, crc);
+    // NOTE: IF you are using a big-endian system. change the order of the next to lines of code to be this:
+    // crc = ByteCRC16(value >> 8, crc);
+    // crc = ByteCRC16(value, crc);
         crc = ByteCRC16(value, crc);
-#else
-        crc = ByteCRC16(value, crc);
         crc = ByteCRC16(value >> 8, crc);
-#endif
     }
 	while (--count);
     return (CRC16) crc;
