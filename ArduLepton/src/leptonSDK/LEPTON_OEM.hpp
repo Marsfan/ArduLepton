@@ -193,24 +193,25 @@ typedef enum LEP_OEM_VIDEO_OUTPUT_ENABLE_TAG
 */
 typedef enum LEP_OEM_VIDEO_OUTPUT_FORMAT_TAG
 {
-   LEP_VIDEO_OUTPUT_FORMAT_RAW8 = 0,          // To be supported in later release
-   LEP_VIDEO_OUTPUT_FORMAT_RAW10,             // To be supported in later release
-   LEP_VIDEO_OUTPUT_FORMAT_RAW12,             // To be supported in later release
-   LEP_VIDEO_OUTPUT_FORMAT_RGB888,            // To be supported in later release
-   LEP_VIDEO_OUTPUT_FORMAT_RGB666,            // To be supported in later release
-   LEP_VIDEO_OUTPUT_FORMAT_RGB565,            // To be supported in later release
-   LEP_VIDEO_OUTPUT_FORMAT_YUV422_8BIT,       // To be supported in later release
-   LEP_VIDEO_OUTPUT_FORMAT_RAW14,             // SUPPORTED in this release
-   LEP_VIDEO_OUTPUT_FORMAT_YUV422_10BIT,      // To be supported in later release
-   LEP_VIDEO_OUTPUT_FORMAT_USER_DEFINED,      // To be supported in later release
-   LEP_VIDEO_OUTPUT_FORMAT_RAW8_2,            // To be supported in later release
-   LEP_VIDEO_OUTPUT_FORMAT_RAW8_3,            // To be supported in later release
-   LEP_VIDEO_OUTPUT_FORMAT_RAW8_4,            // To be supported in later release
-   LEP_VIDEO_OUTPUT_FORMAT_RAW8_5,            // To be supported in later release
-   LEP_VIDEO_OUTPUT_FORMAT_RAW8_6,            // To be supported in later release
-   LEP_END_VIDEO_OUTPUT_FORMAT
+    LEP_VIDEO_OUTPUT_FORMAT_RAW8 = 0,     // To be supported in later release
+    LEP_VIDEO_OUTPUT_FORMAT_RAW10,        // To be supported in later release
+    LEP_VIDEO_OUTPUT_FORMAT_RAW12,        // To be supported in later release
+    LEP_VIDEO_OUTPUT_FORMAT_RGB888,       // To be supported in later release
+    LEP_VIDEO_OUTPUT_FORMAT_RGB666,       // To be supported in later release
+    LEP_VIDEO_OUTPUT_FORMAT_RGB565,       // To be supported in later release
+    LEP_VIDEO_OUTPUT_FORMAT_YUV422_8BIT,  // To be supported in later release
+    LEP_VIDEO_OUTPUT_FORMAT_RAW14,        // SUPPORTED in this release
+    LEP_VIDEO_OUTPUT_FORMAT_YUV422_10BIT, // To be supported in later release
+    LEP_VIDEO_OUTPUT_FORMAT_USER_DEFINED, // To be supported in later release
+    LEP_VIDEO_OUTPUT_FORMAT_RAW8_2,       // To be supported in later release
+    LEP_VIDEO_OUTPUT_FORMAT_RAW8_3,       // To be supported in later release
+    LEP_VIDEO_OUTPUT_FORMAT_RAW8_4,       // To be supported in later release
+    LEP_VIDEO_OUTPUT_FORMAT_RAW8_5,       // To be supported in later release
+    LEP_VIDEO_OUTPUT_FORMAT_RAW8_6,       // To be supported in later release
+    LEP_END_VIDEO_OUTPUT_FORMAT = 0xFFFFFFFF,
 
-}LEP_OEM_VIDEO_OUTPUT_FORMAT_E, *LEP_OEM_VIDEO_OUTPUT_FORMAT_E_PTR;
+} LEP_OEM_VIDEO_OUTPUT_FORMAT_E,
+    *LEP_OEM_VIDEO_OUTPUT_FORMAT_E_PTR;
 
 /* Video Output Source Selection
 */
@@ -323,7 +324,7 @@ typedef enum LEP_OEM_VSYNC_DELAY_E_TAG
    LEP_OEM_VSYNC_DELAY_PLUS_2 = 2,
    LEP_OEM_VSYNC_DELAY_PLUS_3 = 3,
 
-   LEP_END_OEM_VSYNC_DELAY
+   LEP_END_OEM_VSYNC_DELAY = 0xFFFFFFFF
 } LEP_OEM_VSYNC_DELAY_E, *LEP_OEM_VSYNC_DELAY_E_PTR;
 
 typedef enum LEP_OEM_GPIO_MODE_E_TAG
@@ -335,7 +336,7 @@ typedef enum LEP_OEM_GPIO_MODE_E_TAG
    LEP_OEM_GPIO_MODE_SPI_SLAVE_VLB_DATA = 4,
    LEP_OEM_GPIO_MODE_VSYNC = 5,
 
-   LEP_OEM_END_GPIO_MODE,
+   LEP_OEM_END_GPIO_MODE = 0xFFFFFFFF,
 }LEP_OEM_GPIO_MODE_E, *LEP_OEM_GPIO_MODE_E_PTR;
 
 typedef enum LEP_OEM_USER_PARAMS_STATE_E_TAG
